@@ -64,6 +64,8 @@ Defines individual key attributes.
 | `keyCodeLongPress`       | Int?     | Key code triggered on long press.                                                            |
 | `label`                  | String?  | Primary text label on the key.                                                               |
 | `labelLongPress`         | String?  | Small secondary label shown on long press.                                                   |
+| `keyCodeSwipeUp` / `Down` / `Left` / `Right` | Int? | Key code triggered by swiping that way on the key.                                |
+| `labelSwipeUp` / `Down` / `Left` / `Right`   | String? | Text committed by that swipe if no swipe key code is set. Also drawn on the key. |
 | `icon`                   | String?  | Path to the key's drawable icon (e.g., `@drawable/icon_name`).                               |
 | `keyWidth`               | Float?   | Width of the key (fallback to `Row.defaultKeyWidth` or `KeyboardLayout.defaultKeyWidth`).    |
 | `keyHeight`              | Float?   | Height of the key (fallback to `Row.defaultKeyHeight` or `KeyboardLayout.defaultKeyHeight`). |
@@ -180,6 +182,9 @@ Custom keycodes are used to trigger special actions. These are defined in the `C
 | `KEYCODE_CLIPBOARD_ENTRY`                | -22   | Defines a key to be a clipboard text holder (see clipboard layout) |
 | `KEYCODE_CLIPBOARD_ERASE`                | -23   | Clears all clipboard keys (emptying clipboard)                     |
 | `KEYCODE_OPEN_CLIPBOARD`                 | -24   | Open or close clipboard special layout                             |
+| `KEYCODE_VOICE_INPUT`                    | -25   | Voice key: hold to dictate, swipe up to lock, tap to stop. As a swipe or long-press action it toggles locked dictation |
+| `KEYCODE_CURSOR_PAD`                     | -26   | Drag on the key to move the cursor (one step per 15dp)             |
+| `KEYCODE_SELECTION_PAD`                  | -27   | Drag to extend the selection; tap to clear it and keep the cursor at its moving end |
 | `KEYCODE_IGNORE`                         | -1    | Placeholder key code for short or long press to perform no action  |
 
 For all other standard keycodes, refer to [Android KeyEvent Documentation](https://developer.android.com/reference/android/view/KeyEvent).
@@ -220,6 +225,8 @@ You can use those layouts as templates by saving them under different names.
 ## Notes
 
 - Long-press actions can be defined using `keyCodeLongPress` and `smallLabel`.
+- Swipe actions fire on release once the finger moves 25dp in a direction that has an action. Directions without an action still count as a tap.
+- Voice input needs microphone permission. The keyboard asks for it the first time you use voice input.
 - Keys can extend into adjacent rows using custom heights (like a space key in default layout).
 
 ---

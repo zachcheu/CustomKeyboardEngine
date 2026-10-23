@@ -26,7 +26,46 @@ class CustomKeyboardView @JvmOverloads constructor(
 
     interface OnKeyboardActionListener {
         fun onKey(code: Int?, label: CharSequence?)
+
+        /** Moves the cursor by [dx] characters and [dy] lines; extends the selection when [select] is true. */
+        fun onCursorMove(dx: Int, dy: Int, select: Boolean) {}
+
+        /** Clears the selection and leaves the cursor at the moving end of it. */
+        fun onSelectionCollapse() {}
+
+        /** Voice key touched. */
+        fun onVoiceDown() {}
+
+        /** Voice key swiped up while held: keep listening after release. */
+        fun onVoiceLock() {}
+
+        /** Voice key released. */
+        fun onVoiceUp() {}
     }
+
+    private enum class SwipeDirection { UP, DOWN, LEFT, RIGHT }
+
+    /** Per-pointer gesture state. Coordinates are raw view pixels. */
+    private class PointerGesture(
+        val key: Key,
+        val startX: Float,
+        val startY: Float,
+    ) {
+        var stepOriginX = startX
+        var stepOriginY = startY
+        var hasDragged = false
+        var swipe: SwipeDirection? = null
+        var voiceLocked = false
+    }
+
+    private val gestures = mutableMapOf<Int, PointerGesture>()
+
+    /** True while voice input is listening; the voice key is drawn highlighted. */
+    var isVoiceActive = false
+        set(value) {
+            field = value
+            invalidate()
+        }
 
     // Keyboard data.
     var keyboard: CustomKeyboard? = null
@@ -123,7 +162,7 @@ class CustomKeyboardView @JvmOverloads constructor(
 
     private val handler = Handler(Looper.getMainLooper(), handlerCallback)
 
-    private fun handleTouchDown(x: Int, y: Int, pointerId: Int) {
+    private fun handleTouchDown(x: Int, y: Int, pointerId: Int, rawX: Float, rawY: Float) {
         val correctedX = x + settings.touchCorrectionX.toInt()
         val correctedY = y + settings.touchCorrectionY.toInt()
         val key = keyboard?.getKeyAt(correctedX.toFloat(), correctedY.toFloat()) ?: return
@@ -131,9 +170,13 @@ class CustomKeyboardView @JvmOverloads constructor(
         downKeyIndex = keys?.indexOf(key) ?: -1
         isLongPressHandled = false
         isKeyRepeated = false
+        gestures[pointerId] = PointerGesture(key, rawX, rawY)
 
-        // Start repeatable keys only if repeatable
-        if (key.isRepeatable == true) {
+        if (key.keyCode == Constants.KEYCODE_CURSOR_PAD || key.keyCode == Constants.KEYCODE_SELECTION_PAD) {
+            // Drag keys have no tap, repeat or long-press timers.
+        } else if (key.keyCode == Constants.KEYCODE_VOICE_INPUT) {
+            keyboardActionListener?.onVoiceDown()
+        } else if (key.isRepeatable == true) {
             startKeyRepeat(key)
         } else {
             // Schedule long press for non-repeatable keys
@@ -151,18 +194,23 @@ class CustomKeyboardView @JvmOverloads constructor(
 
         // Retrieve the key associated with this pointer ID
         val key = activeKeys[pointerId]
+        val gesture = gestures.remove(pointerId)
+        val swipe = gesture?.swipe
 
-        key?.let {
+        if (key != null) {
+            val it = key
             when {
-                isLongPressHandled -> {
-                    return
+                it.keyCode == Constants.KEYCODE_CURSOR_PAD -> Unit
+                it.keyCode == Constants.KEYCODE_SELECTION_PAD -> {
+                    if (gesture?.hasDragged != true) keyboardActionListener?.onSelectionCollapse()
                 }
-                isKeyRepeated -> {
-                    return
+                it.keyCode == Constants.KEYCODE_VOICE_INPUT -> keyboardActionListener?.onVoiceUp()
+                swipe != null -> {
+                    val (code, label) = swipeAction(it, swipe)
+                    keyboardActionListener?.onKey(code, label)
                 }
-                else -> {
-                    keyboardActionListener?.onKey(it.keyCode, it.label)
-                }
+                isLongPressHandled || isKeyRepeated -> Unit
+                else -> keyboardActionListener?.onKey(it.keyCode, it.label)
             }
         }
 
@@ -204,11 +252,15 @@ class CustomKeyboardView @JvmOverloads constructor(
     }
 
     fun cancelAllEvents() {
+        if (gestures.values.any { it.key.keyCode == Constants.KEYCODE_VOICE_INPUT }) {
+            keyboardActionListener?.onVoiceUp()
+        }
         cancelRepeatKey()
         handler.removeMessages(MSG_LONGPRESS)
         isKeyRepeated = false
         isLongPressHandled = false
         activeKeys.clear()
+        gestures.clear()
     }
 
     override fun onDetachedFromWindow() {
@@ -262,9 +314,9 @@ class CustomKeyboardView @JvmOverloads constructor(
         when (actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                 // Handle new touch
-                val scaledX = (event.getX(pointerIndex) / scaleX).toInt()
-                val scaledY = (event.getY(pointerIndex) / scaleY).toInt()
-                handleTouchDown(scaledX, scaledY, pointerId)
+                val rawX = event.getX(pointerIndex)
+                val rawY = event.getY(pointerIndex)
+                handleTouchDown((rawX / scaleX).toInt(), (rawY / scaleY).toInt(), pointerId, rawX, rawY)
                 performClick()
                 //Log.d("TOUCH", "Pointer Down: Index $pointerIndex, x=$scaledX, y=$scaledY")
             }
@@ -279,13 +331,9 @@ class CustomKeyboardView @JvmOverloads constructor(
             }
 
             MotionEvent.ACTION_MOVE -> {
-                // Handle touch move for all active pointers
-                //for (i in 0 until event.pointerCount) {
-                    //val scaledX = (event.getX(i) / scaleX).toInt()
-                    //val scaledY = (event.getY(i) / scaleY).toInt()
-                    //handleTouchMove(scaledX, scaledY)
-                    //Log.d("TOUCH", "Pointer Move: Index $i, x=$scaledX, y=$scaledY")
-                //}
+                for (i in 0 until event.pointerCount) {
+                    handleTouchMove(event.getPointerId(i), event.getX(i), event.getY(i))
+                }
             }
 
             MotionEvent.ACTION_CANCEL -> {
@@ -303,20 +351,54 @@ class CustomKeyboardView @JvmOverloads constructor(
         return true
     }
 
-    // TODO: Swipes
-    private fun handleTouchMove(x: Int, y: Int) {
-        val correctedX = x + settings.touchCorrectionX.toInt()
-        val correctedY = y + settings.touchCorrectionY.toInt()
-        // Optional: Cancel repeat/long press if the finger moves off the key
-        if (keyboard?.getKeyAt(correctedX.toFloat(), correctedY.toFloat()) == null) {
-            cancelRepeatKey()
-            handler.removeMessages(MSG_LONGPRESS)
+    private fun dpToPx(dp: Float): Float = dp * resources.displayMetrics.density
+
+    private fun handleTouchMove(pointerId: Int, x: Float, y: Float) {
+        val gesture = gestures[pointerId] ?: return
+        val key = gesture.key
+        when (key.keyCode) {
+            Constants.KEYCODE_CURSOR_PAD, Constants.KEYCODE_SELECTION_PAD -> {
+                val step = dpToPx(Constants.DRAG_STEP_DP)
+                val dx = ((x - gesture.stepOriginX) / step).toInt()
+                val dy = ((y - gesture.stepOriginY) / step).toInt()
+                if (dx == 0 && dy == 0) return
+                gesture.stepOriginX += dx * step
+                gesture.stepOriginY += dy * step
+                gesture.hasDragged = true
+                keyboardActionListener?.onCursorMove(dx, dy, key.keyCode == Constants.KEYCODE_SELECTION_PAD)
+            }
+            Constants.KEYCODE_VOICE_INPUT -> {
+                if (!gesture.voiceLocked && gesture.startY - y > dpToPx(Constants.SWIPE_THRESHOLD_DP)) {
+                    gesture.voiceLocked = true
+                    keyboardActionListener?.onVoiceLock()
+                }
+            }
+            else -> {
+                if (gesture.swipe != null || isLongPressHandled || !key.hasSwipeActions) return
+                val dx = x - gesture.startX
+                val dy = y - gesture.startY
+                if (maxOf(kotlin.math.abs(dx), kotlin.math.abs(dy)) < dpToPx(Constants.SWIPE_THRESHOLD_DP)) return
+                val direction = if (kotlin.math.abs(dx) > kotlin.math.abs(dy)) {
+                    if (dx > 0) SwipeDirection.RIGHT else SwipeDirection.LEFT
+                } else {
+                    if (dy > 0) SwipeDirection.DOWN else SwipeDirection.UP
+                }
+                // Only commit to a swipe if this direction has an action; otherwise the tap still counts.
+                val (code, label) = swipeAction(key, direction)
+                if (code == null && label == null) return
+                gesture.swipe = direction
+                cancelRepeatKey()
+                handler.removeMessages(MSG_LONGPRESS)
+            }
         }
     }
 
-
-
-
+    private fun swipeAction(key: Key, direction: SwipeDirection): Pair<Int?, String?> = when (direction) {
+        SwipeDirection.UP -> key.keyCodeSwipeUp to key.labelSwipeUp
+        SwipeDirection.DOWN -> key.keyCodeSwipeDown to key.labelSwipeDown
+        SwipeDirection.LEFT -> key.keyCodeSwipeLeft to key.labelSwipeLeft
+        SwipeDirection.RIGHT -> key.keyCodeSwipeRight to key.labelSwipeRight
+    }
 
     /////////////////////////////////////
     // RENDERED VIEW SCALING LOGIC
@@ -457,8 +539,37 @@ class CustomKeyboardView @JvmOverloads constructor(
                 val cornerRadius = rectKeyHeight * settings.keyCornerRadiusFactor
 
                 // Draw key background
-                paint.color = if (key.isModifier == true) keyModifierBackgroundColor else keyBackgroundColor
+                paint.color = when {
+                    key.keyCode == Constants.KEYCODE_VOICE_INPUT && isVoiceActive -> keyLabelLongPressTextColor
+                    key.isModifier == true -> keyModifierBackgroundColor
+                    else -> keyBackgroundColor
+                }
                 canvas.drawRoundRect(keyBounds, cornerRadius, cornerRadius, paint)
+
+                // Swipe hints: up top-left, down bottom-center, left mid-left, right mid-right.
+                if (key.hasSwipeActions) {
+                    paint.color = if (key.isModifier == true) keyModifierSmallLabelTextColor else keyLabelLongPressTextColor
+                    paint.textSize = rectKeyHeight * Constants.TEXT_SIZE_FACTOR_SWIPE_LABEL
+                    val pad = rectKeyHeight * 0.08f
+                    val ascent = paint.textSize * 0.8f
+                    key.labelSwipeUp?.let {
+                        paint.textAlign = Paint.Align.LEFT
+                        canvas.drawText(it, keyBounds.left + pad, keyBounds.top + pad + ascent, paint)
+                    }
+                    key.labelSwipeDown?.let {
+                        paint.textAlign = Paint.Align.CENTER
+                        canvas.drawText(it, keyBounds.centerX(), keyBounds.bottom - pad, paint)
+                    }
+                    key.labelSwipeLeft?.let {
+                        paint.textAlign = Paint.Align.LEFT
+                        canvas.drawText(it, keyBounds.left + pad, keyBounds.centerY() + ascent / 2, paint)
+                    }
+                    key.labelSwipeRight?.let {
+                        paint.textAlign = Paint.Align.RIGHT
+                        canvas.drawText(it, keyBounds.right - pad, keyBounds.centerY() + ascent / 2, paint)
+                    }
+                    paint.textAlign = Paint.Align.CENTER
+                }
 
                 // --- Draw content if any ---
                 if (shouldRenderKey(key)) {

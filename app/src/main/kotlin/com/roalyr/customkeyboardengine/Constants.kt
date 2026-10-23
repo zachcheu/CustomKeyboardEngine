@@ -39,6 +39,13 @@ class Constants {
         const val KEYCODE_CLIPBOARD_ENTRY = -22
         const val KEYCODE_CLIPBOARD_ERASE = -23
         const val KEYCODE_OPEN_CLIPBOARD = -24
+        const val KEYCODE_VOICE_INPUT = -25 // Hold to dictate, swipe up to lock. As swipe/long-press action: toggles locked dictation.
+        const val KEYCODE_CURSOR_PAD = -26 // Drag on the key to move the cursor.
+        const val KEYCODE_SELECTION_PAD = -27 // Drag to extend selection; tap to collapse to the selection end.
+
+        // Gesture defaults (DP).
+        const val SWIPE_THRESHOLD_DP = 25f
+        const val DRAG_STEP_DP = 15f
 
         // Default values.
         const val DEFAULT_KEY_HEIGHT = 40f // Logical DP
@@ -78,6 +85,7 @@ class Constants {
         // Rendering text size factors (relative to key height)
         const val TEXT_SIZE_FACTOR_ICON = 0.6f
         const val TEXT_SIZE_FACTOR_SMALL_LABEL = 0.32f
+        const val TEXT_SIZE_FACTOR_SWIPE_LABEL = 0.22f
         const val TEXT_SIZE_FACTOR_PRIMARY_LABEL = 0.37f
         const val TEXT_SIZE_FACTOR_CENTERED_LABEL = 0.5f
         const val TEXT_SIZE_FACTOR_MODIFIER_LABEL = 0.4f
@@ -129,10 +137,12 @@ class Constants {
         const val EXTRA_TYPE = "EXTRA_PERMISSION_TYPE"
         const val OVERLAY = "PERMISSION_TYPE_OVERLAY"
         const val STORAGE = "PERMISSION_TYPE_STORAGE"
+        const val MICROPHONE = "PERMISSION_TYPE_MICROPHONE"
     }
 
     object RequestCodes {
         const val STORAGE_PERMISSIONS = 1001
+        const val MICROPHONE_PERMISSION = 1002
     }
 
 

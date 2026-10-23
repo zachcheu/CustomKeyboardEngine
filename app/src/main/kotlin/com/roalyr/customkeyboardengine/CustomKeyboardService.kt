@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.ExtractedTextRequest
 import android.os.Handler
 import android.os.Looper
 import java.io.File
@@ -57,6 +58,8 @@ class CustomKeyboardService : InputMethodService() {
 
     private var lastSettingsError: String? = null
 
+    private lateinit var voiceInput: VoiceInput
+
 
     companion object {
         private const val TAG = "CustomKeyboardService"
@@ -76,6 +79,17 @@ class CustomKeyboardService : InputMethodService() {
         initClipboardManager()
         loadKeyboardSettings()
         CustomKeyboardClipboard.ensureMapSize(Constants.CLIPBOARD_MAX_SIZE)
+        voiceInput = VoiceInput(
+            context = this,
+            onPartialText = { currentInputConnection?.setComposingText(it, 1) },
+            onFinalText = { commitDictatedText(it) },
+            onSessionEndedWithoutResult = { currentInputConnection?.finishComposingText() },
+            onActiveChanged = { active ->
+                keyboardView?.isVoiceActive = active
+                floatingKeyboardView?.isVoiceActive = active
+                serviceKeyboardView?.isVoiceActive = active
+            },
+        )
         super.onCreate()
     }
 
@@ -90,6 +104,7 @@ class CustomKeyboardService : InputMethodService() {
     }
 
     override fun onDestroy() {
+        voiceInput.destroy()
         closeAllKeyboards()
         clipboardManager.removePrimaryClipChangedListener(clipboardListener)
         super.onDestroy()
@@ -115,6 +130,7 @@ class CustomKeyboardService : InputMethodService() {
 
     override fun onFinishInputView(finishingInput: Boolean) {
         super.onFinishInputView(finishingInput)
+        voiceInput.stop()
         keyboardView?.cancelAllEvents()
         floatingKeyboardView?.cancelAllEvents()
         serviceKeyboardView?.cancelAllEvents()
@@ -471,9 +487,17 @@ class CustomKeyboardService : InputMethodService() {
     private fun setKeyboardActionListener(keyboardView: CustomKeyboardView) {
         keyboardView.setOnKeyboardActionListener(object : CustomKeyboardView.OnKeyboardActionListener {
 
+            override fun onCursorMove(dx: Int, dy: Int, select: Boolean) = moveCursor(dx, dy, select)
+            override fun onSelectionCollapse() = collapseSelection()
+            override fun onVoiceDown() = voiceInput.onKeyDown()
+            override fun onVoiceLock() = voiceInput.lock()
+            override fun onVoiceUp() = voiceInput.onKeyUp()
+
             override fun onKey(code: Int?, label: CharSequence?) {
-                if (code != null){
+                if (code != null && code < Constants.KEYCODE_IGNORE) {
+                    // App-specific codes are handled here and never injected as key events.
                     handleCustomKey(code, label)
+                    return
                 }
                 when (code) {
                     KeyEvent.KEYCODE_SHIFT_LEFT, KeyEvent.KEYCODE_SHIFT_RIGHT -> {
@@ -611,11 +635,43 @@ class CustomKeyboardService : InputMethodService() {
                 Constants.KEYCODE_OPEN_CLIPBOARD -> {
                     toggleClipboardLayout()
                 }
+                // Reached only from swipe or long-press actions; the voice key itself uses onVoiceDown/Up.
+                Constants.KEYCODE_VOICE_INPUT -> voiceInput.toggleLocked()
 
             }
         }
     }
 
+
+    ////////////////////////////////////////////
+    // Cursor, selection and dictation
+    private fun moveCursor(dx: Int, dy: Int, select: Boolean) {
+        // Shift + arrow extends the selection from its fixed anchor, so it keeps growing across drags.
+        val meta = if (select) KeyEvent.META_SHIFT_ON or KeyEvent.META_SHIFT_LEFT_ON else 0
+        val horizontal = if (dx > 0) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT
+        val vertical = if (dy > 0) KeyEvent.KEYCODE_DPAD_DOWN else KeyEvent.KEYCODE_DPAD_UP
+        repeat(kotlin.math.abs(dx)) { injectKeyEvent(horizontal, meta) }
+        repeat(kotlin.math.abs(dy)) { injectKeyEvent(vertical, meta) }
+    }
+
+    private fun collapseSelection() {
+        val ic = currentInputConnection ?: return
+        val extracted = ic.getExtractedText(ExtractedTextRequest(), 0)
+        if (extracted == null || extracted.selectionStart < 0) {
+            injectKeyEvent(KeyEvent.KEYCODE_DPAD_RIGHT, 0)
+            return
+        }
+        // selectionEnd is the moving end (it may be before selectionStart).
+        val end = extracted.startOffset + extracted.selectionEnd
+        ic.setSelection(end, end)
+    }
+
+    private fun commitDictatedText(text: String) {
+        val ic = currentInputConnection ?: return
+        val before = ic.getTextBeforeCursor(1, 0)
+        val needsSpace = !before.isNullOrEmpty() && !before.last().isWhitespace()
+        ic.commitText(if (needsSpace) " $text" else text, 1)
+    }
 
     ////////////////////////////////////////////
     // Event injections

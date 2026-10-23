@@ -3,181 +3,248 @@
   "defaultKeyHeight": 45,
   "rows": [
     {
-      "defaultKeyWidth": 8.333,
       "keys": [
         {
-          "label": "Es",
-          "keyCode": 111,
-          "isModifier": true
-        },
-        { "label": "1", "labelLongPress": "!" },
-        { "label": "2", "labelLongPress": "@" },
-        { "label": "3", "labelLongPress": "#" },
-        { "label": "4", "labelLongPress": "$" },
-        { "label": "5", "labelLongPress": "%" },
-        { "label": "6", "labelLongPress": "^" },
-        { "label": "7", "labelLongPress": "&" },
-        { "label": "8", "labelLongPress": "*" },
-        { "label": "9", "labelLongPress": "(" },
-        { "label": "0", "labelLongPress": ")" },
-        {
-          "label": "Del",
-          "keyCode": 112,
-          "isModifier": true,
-          "isRepeatable": true
-        }
-      ]
-    },
-    {
-      "defaultKeyWidth": 10,
-      "keys": [
-        {
-          "icon": "@drawable/ic_tab",
-          "keyCode": 61,
-          "isModifier": true,
-          "keyWidth": 15
-        },
-        { "label": "`", "labelLongPress": "~" },
-        { "label": "[", "labelLongPress": "{" },
-        { "label": "]", "labelLongPress": "}" },
-        { "label": "'", "labelLongPress": "\"" },
-        { "label": "\\", "labelLongPress": "|" },
-        { "label": "-", "labelLongPress": "_" },
-        { "label": "=", "labelLongPress": "+" },
-        {
-          "icon": "@drawable/ic_backspace",
-          "keyCode": 67,
-          "isModifier": true,
-          "isRepeatable": true,
-          "keyWidth": 15
-        }
-      ]
-    },
-    {
-      "keys": [
-        { "label": "q" },
-        { "label": "w" },
-        { "label": "e" },
-        { "label": "r" },
-        { "label": "t" },
-        { "label": "y" },
-        { "label": "u" },
-        { "label": "i" },
-        { "label": "o" },
-        { "label": "p" }
-      ]
-    },
-    {
-      "keys": [
-        { "label": "a" },
-        { "label": "s" },
-        { "label": "d" },
-        { "label": "f" },
-        { "label": "g" },
-        { "label": "h" },
-        { "label": "j" },
-        { "label": "k" },
-        { "label": "l" },
-        { "label": ";", "labelLongPress": ":" }
-      ]
-    },
-    {
-      "keys": [
-        { "label": "z" },
-        { "label": "x" },
-        { "label": "c" },
-        { "label": "v" },
-        { "label": "b" },
-        { "label": "n" },
-        { "label": "m" },
-        { "label": ",", "labelLongPress": "<" },
-        { "label": ".", "labelLongPress": ">" },
-        { "label": "/", "labelLongPress": "?" }
-      ]
-    },
-    {
-      "defaultKeyWidth": 11.667,
-      "keys": [
-        {
-          "label": "shf",
-          "keyCode": 59,
-          "labelLongPress": "cap",
-          "keyCodeLongPress": 115,
-          "isModifier": true
-        },
-        {
-          "label": "ctl",
-          "keyCode": 113,
-          "isModifier": true
-        },
-        {
-          "label": "alt",
-          "keyCode": 57,
-          "isModifier": true
-        },
-        {
-          "label": "⎵",
-          "keyCode": 62,
-          "keyWidth": 30,
-          "keyHeight": 93,
-          "isRepeatable": true
-        },
-        {
-          "icon": "@drawable/ic_emoji",
-          "keyCode": -1,
-          "isModifier": true
-        },
-        {
-          "icon": "@drawable/ic_up_triangle_arrow",
-          "keyCode": 19,
-          "isModifier": true,
-          "isRepeatable": true
-        },
-        {
-          "label": "Ent",
-          "keyCode": 66,
-          "isModifier": true
-        }
-      ]
-    },
-    {
-      "defaultKeyWidth": 11.667,
-      "keys": [
-        {
-          "icon": "@drawable/ic_anchor",
-          "keyCode": -12,
-          "isModifier": true
-        },
-        {
-          "icon": "@drawable/ic_clipboard",
-          "keyCode": -24,
-          "isModifier": true
-        },
-        {
-          "label": "en",
-          "labelLongPress": "var",
-          "keyCode": -21,
-          "keyCodeLongPress": -1,
-          "isModifier": true,
-          "logicalKeyGap": 30
-        },
-        {
-          "icon": "@drawable/ic_left_triangle_arrow",
+          "label": "<",
           "keyCode": 21,
           "isModifier": true,
           "isRepeatable": true
         },
         {
-          "icon": "@drawable/ic_down_triangle_arrow",
+          "label": "^",
+          "keyCode": 19,
+          "isModifier": true,
+          "isRepeatable": true
+        },
+        {
+          "label": "✥ cursor",
+          "keyCode": -26,
+          "isModifier": true,
+          "preserveLabelCase": true,
+          "keyWidth": 30
+        },
+        {
+          "label": "▭ select",
+          "keyCode": -27,
+          "isModifier": true,
+          "preserveLabelCase": true,
+          "keyWidth": 30
+        },
+        {
+          "label": "v",
           "keyCode": 20,
           "isModifier": true,
           "isRepeatable": true
         },
         {
-          "icon": "@drawable/ic_right_triangle_arrow",
+          "label": ">",
           "keyCode": 22,
           "isModifier": true,
           "isRepeatable": true
+        }
+      ]
+    },
+    {
+      "keys": [
+        {
+          "label": "1",
+          "labelLongPress": "!"
+        },
+        {
+          "label": "2",
+          "labelLongPress": "?"
+        },
+        {
+          "label": "3",
+          "labelLongPress": "#"
+        },
+        {
+          "label": "4",
+          "labelLongPress": "$"
+        },
+        {
+          "label": "5",
+          "labelLongPress": "%"
+        },
+        {
+          "label": "6",
+          "labelLongPress": "&"
+        },
+        {
+          "label": "7",
+          "labelLongPress": "/"
+        },
+        {
+          "label": "8",
+          "labelLongPress": "<"
+        },
+        {
+          "label": "9",
+          "labelLongPress": ">"
+        },
+        {
+          "label": "0",
+          "labelLongPress": "="
+        }
+      ]
+    },
+    {
+      "keys": [
+        {
+          "label": "q",
+          "labelLongPress": "`"
+        },
+        {
+          "label": "w",
+          "labelLongPress": "'"
+        },
+        {
+          "label": "e",
+          "labelLongPress": "\""
+        },
+        {
+          "label": "r",
+          "labelLongPress": ";"
+        },
+        {
+          "label": "t",
+          "labelLongPress": "~"
+        },
+        {
+          "label": "y",
+          "labelLongPress": "\\"
+        },
+        {
+          "label": "u",
+          "labelLongPress": "_"
+        },
+        {
+          "label": "i",
+          "labelLongPress": "{"
+        },
+        {
+          "label": "o",
+          "labelLongPress": "}"
+        },
+        {
+          "label": "p",
+          "labelLongPress": "+"
+        }
+      ]
+    },
+    {
+      "keys": [
+        {
+          "label": "a",
+          "labelLongPress": "@",
+          "keyWidth": 15
+        },
+        {
+          "label": "s",
+          "labelLongPress": "*"
+        },
+        {
+          "label": "d"
+        },
+        {
+          "label": "f",
+          "labelLongPress": ","
+        },
+        {
+          "label": "g"
+        },
+        {
+          "label": "h",
+          "labelLongPress": "-"
+        },
+        {
+          "label": "j",
+          "labelLongPress": "."
+        },
+        {
+          "label": "k",
+          "labelLongPress": "("
+        },
+        {
+          "label": "l",
+          "labelLongPress": ")",
+          "keyWidth": 15
+        }
+      ]
+    },
+    {
+      "keys": [
+        {
+          "icon": "@drawable/ic_up_bold_arrow",
+          "keyCode": 59,
+          "labelLongPress": "cap",
+          "keyCodeLongPress": 115,
+          "isModifier": true,
+          "keyWidth": 15
+        },
+        {
+          "label": "z"
+        },
+        {
+          "label": "x"
+        },
+        {
+          "label": "c",
+          "labelLongPress": ":"
+        },
+        {
+          "label": "v",
+          "labelLongPress": "|"
+        },
+        {
+          "label": "b",
+          "labelLongPress": "\\"
+        },
+        {
+          "label": "n",
+          "labelLongPress": "/"
+        },
+        {
+          "label": "m",
+          "labelLongPress": "["
+        },
+        {
+          "label": "↔",
+          "keyCode": 61,
+          "labelLongPress": "]",
+          "isModifier": true,
+          "keyWidth": 15
+        }
+      ]
+    },
+    {
+      "keys": [
+        {
+          "icon": "@drawable/ic_mic",
+          "keyCode": -25,
+          "isModifier": true,
+          "keyWidth": 15
+        },
+        {
+          "icon": "@drawable/ic_backspace",
+          "keyCode": 67,
+          "isModifier": true,
+          "isRepeatable": true,
+          "keyWidth": 20
+        },
+        {
+          "label": "⏎",
+          "keyCode": 66,
+          "isModifier": true,
+          "keyWidth": 30
+        },
+        {
+          "label": "⎵",
+          "keyCode": 62,
+          "isRepeatable": true,
+          "keyWidth": 35,
+          "keyCodeSwipeUp": -25,
+          "labelSwipeUp": "mic"
         }
       ]
     }

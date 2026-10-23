@@ -27,5 +27,9 @@
     <string name="toast_settings_failed">Failed to copy settings.json: %1$s</string>
     <string name="toast_folder_failed">Failed to create working folder</string>
     <string name="error_unknown_permission">Unknown permission type.</string>
+    <string name="voice_permission_needed">Allow microphone access to use voice input.</string>
+    <string name="voice_permission_denied">Microphone permission denied.</string>
+    <string name="voice_unavailable">No speech recognition service is available on this device.</string>
+    <string name="voice_error">Voice input error (%1$d).</string>
     <string name="info_storage_not_required">Storage permission not required for Android 10+.</string>
 </resources>

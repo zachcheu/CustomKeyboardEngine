@@ -3,6 +3,7 @@ package com.roalyr.customkeyboardengine
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -36,6 +37,11 @@ class ActivityPermissionRequest : AppCompatActivity() {
         when (permissionType) {
             Constants.PermissionTypes.OVERLAY -> requestOverlayPermission()
             Constants.PermissionTypes.STORAGE -> requestStoragePermissions()
+            Constants.PermissionTypes.MICROPHONE -> ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                Constants.RequestCodes.MICROPHONE_PERMISSION
+            )
             else -> {
                 Log.e(TAG, "Unknown permission type: $permissionType")
                 Toast.makeText(this, getString(R.string.error_unknown_permission), Toast.LENGTH_SHORT).show()
@@ -64,5 +70,15 @@ class ActivityPermissionRequest : AppCompatActivity() {
             Toast.makeText(this, getString(R.string.info_storage_not_required), Toast.LENGTH_SHORT).show()
             finish()
         }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == Constants.RequestCodes.MICROPHONE_PERMISSION &&
+            grantResults.firstOrNull() != PackageManager.PERMISSION_GRANTED
+        ) {
+            Toast.makeText(this, getString(R.string.voice_permission_denied), Toast.LENGTH_SHORT).show()
+        }
+        finish()
     }
 }

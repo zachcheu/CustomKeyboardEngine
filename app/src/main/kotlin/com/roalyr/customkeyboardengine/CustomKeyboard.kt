@@ -52,6 +52,8 @@ data class Row(
  * @property keyWidth Optional width as percentage of row width.
  * @property keyHeight Optional height in DP.
  * @property logicalKeyGap Optional horizontal gap to next key as percentage of row width.
+ * @property keyCodeSwipeUp Optional key code triggered by swiping up on the key (likewise Down, Left, Right).
+ * @property labelSwipeUp Optional text committed by swiping up when no swipe key code is set; also drawn on the key.
  * @property isRepeatable If true, key repeats when held.
  * @property isModifier If true, key is rendered as a modifier key (e.g., Shift, Tab).
  * @property preserveLabelCase If true, label case is not changed by Shift or Caps Lock.
@@ -68,6 +70,15 @@ data class Key(
     val labelLongPress: String? = null,
     val icon: String? = null,
 
+    val keyCodeSwipeUp: Int? = null,
+    val keyCodeSwipeDown: Int? = null,
+    val keyCodeSwipeLeft: Int? = null,
+    val keyCodeSwipeRight: Int? = null,
+    val labelSwipeUp: String? = null,
+    val labelSwipeDown: String? = null,
+    val labelSwipeLeft: String? = null,
+    val labelSwipeRight: String? = null,
+
     var keyWidth: Float? = null, // Width percentage
     var keyHeight: Float? = null, // Absolute logical DP
     var logicalKeyGap: Float? = null, // Gap percentage
@@ -81,7 +92,11 @@ data class Key(
     var x: Float = 0f, // Logical X
     var y: Float = 0f,  // Logical Y
     var id: Int = 0 // Unique ID for each key
-)
+) {
+    val hasSwipeActions: Boolean
+        get() = listOf(keyCodeSwipeUp, keyCodeSwipeDown, keyCodeSwipeLeft, keyCodeSwipeRight).any { it != null } ||
+            listOf(labelSwipeUp, labelSwipeDown, labelSwipeLeft, labelSwipeRight).any { it != null }
+}
 
 /**
  * User-overridable settings loaded from `settings.json`.
